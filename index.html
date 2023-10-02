@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .todo-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 300px;
+            background-color: white;
+            margin: 10px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .task-item:hover {
+            background-color: #e0e0e0;
+        }
+
+        .completed-tasks {
+            min-height: 50px;
+            background-color: #f5f5f5;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #add-button {
+            display: block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #add-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="todo-container">
+        <h1>قائمة المهام</h1>
+        <ul id="todo-list"> </ul>
+        <input type="text" id="new-task" placeholder="إضافة مهمة جديدة">
+        <button id="add-button">إضافة</button>
+    </div>
+
+    <div class="completed-tasks" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <p>المهام المنتهية</p>
+        <ul id="completed-tasks"></ul>
+    </div>
+
+    <script>
+        // الدالة التي تُحمِّل المهام من الـ localStorage
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.forEach(task => {
+                const li = document.createElement("li");
+                li.textContent = task.text;
+                li.setAttribute("draggable", "true");
+                li.setAttribute("id", task.id);
+                li.addEventListener("dragstart", drag);
+                document.getElementById("todo-list").appendChild(li);
+            });
+
+
+
+            const completedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
+            completedTasks.forEach(task => {
+                const li = document.createElement("li");
+                li.textContent = task.text;
+                li.setAttribute("draggable", "true");
+                li.setAttribute("id", task.id);
+                li.addEventListener("dragstart", drag);
+                document.getElementById("completed-tasks").appendChild(li);
+            });
+        }
+
+        // الدالة التي تحفظ المهام في الـ localStorage
+        function saveTasks() {
+            const tasks = Array.from(document.querySelectorAll("#todo-list li")).map(li => {
+                return { id: li.id, text: li.textContent };
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+
+            const completedTasks = Array.from(document.querySelectorAll("#completed-tasks li")).map(li => {
+                return { id: li.id, text: li.textContent };
+            });
+            localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drag(event) {
+            event.dataTransfer.setData("text", event.target.id);
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            var taskId = event.dataTransfer.getData("text");
+            var task = document.getElementById(taskId);
+
+            document.getElementById("completed-tasks").appendChild(task);
+            saveTasks();
+        }
+
+        document.getElementById("add-button").addEventListener("click", function () {
+            var newTaskText = document.getElementById("new-task").value;
+            if (newTaskText.trim() !== "") {
+                var newTask = document.createElement("li");
+                var taskId = "task-" + Date.now();
+                newTask.textContent = newTaskText;
+                newTask.setAttribute("draggable", "true");
+                newTask.setAttribute("id", taskId);
+                newTask.addEventListener("dragstart", drag);
+                document.getElementById("todo-list").appendChild(newTask);
+                document.getElementById("new-task").value = "";
+
+                saveTasks();
+            }
+        });
+
+        // تحميل المهام عند تحميل الصفحة
+        loadTasks();
+    </script>
+</body>
+
+</html>
